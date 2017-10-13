@@ -255,7 +255,9 @@ class UserModel
     {
         $sql = "SELECT * FROM privileges WHERE action = :req";
         try {
-            $this->getByID($_SESSION['user']);
+            if ($_SESSION != null) {
+                $this->getByID($_SESSION['user']);
+            }
             $conn = DB::getInstance()->getConnection();
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':req', $req);
