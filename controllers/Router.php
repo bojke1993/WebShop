@@ -76,6 +76,11 @@ class Router
                 $ctrl->showAddUserForm();
                 break;
 
+            case 'listAllCategories':
+                $ctrl = new CategoriesController();
+                $ctrl->showAllCategories();
+                break;
+
             default:
                 require_once APP_ROOT . '/views/login.php';
                 break;

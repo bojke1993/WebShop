@@ -13,9 +13,11 @@ session_start();
 
 define('APP_ROOT', __DIR__);
 require_once 'models/UserModel.php';
+require_once 'models/CategoriesModel.php';
 require_once 'controllers/Controller.php';
 require_once 'controllers/UsrController.php';
 require_once 'controllers/Router.php';
+require_once 'controllers/CategoriesController.php';
 require_once 'database/DB.php';
 
 $op = $_REQUEST['op'];

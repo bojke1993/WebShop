@@ -14,6 +14,7 @@ class UserModel
     private $firstName;
     private $lastName;
     private $type;
+    private $pictureUrl;
 
     public $allUsersList = array();
 
@@ -31,6 +32,22 @@ class UserModel
     public function setAllUsersList($allUsersList)
     {
         $this->allUsersList = $allUsersList;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPictureUrl()
+    {
+        return $this->pictureUrl;
+    }
+
+    /**
+     * @param mixed $pictureUrl
+     */
+    public function setPictureUrl($pictureUrl)
+    {
+        $this->pictureUrl = $pictureUrl;
     }
 
     /**
@@ -137,6 +154,7 @@ class UserModel
             $this->firstName = $result['firstName'];
             $this->lastName = $result['lastName'];
             $this->type = $result['type'];
+            $this->pictureUrl = $result['picture'];
         } catch (Exception $exception) {
             $exception->getMessage();
         }
@@ -158,6 +176,7 @@ class UserModel
             $this->firstName = $result['firstName'];
             $this->lastName = $result['lastName'];
             $this->type = $result['type'];
+            $this->pictureUrl = $result['picture'];
             if ($this == null) {
                 return false;
             } else {
@@ -226,10 +245,10 @@ class UserModel
     }
 
     //if user updates data by himself
-    public function updateUserByHimself($id, $email, $fname, $lname, $currentPassword, $newPassword)
+    public function updateUserByHimself($id, $email, $fname, $lname, $currentPassword, $newPassword, $url)
     {
         $sql = 'UPDATE person SET email = :email, firstName = :fname, 
-                lastName = :lname, password = :password WHERE idperson = :id';
+                lastName = :lname, password = :password, picture = :url WHERE idperson = :id';
         try{
             $this->getByID($id);
             if ($this->getPassword() !== $currentPassword ) {
@@ -242,6 +261,7 @@ class UserModel
             $stmt->bindParam(':lname', $lname);
             $stmt->bindParam(':password', $newPassword);
             $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':url',$url);
             $stmt->execute();
 
             return true;

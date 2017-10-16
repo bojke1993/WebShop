@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivanbojovic
- * Date: 11.10.17.
- * Time: 15.08
- */
 
 class UsrController extends Controller
 {
@@ -42,7 +36,7 @@ class UsrController extends Controller
     {
         $authentic = false;
         $this->user->getByEmail($e);
-        if ($e == $this->user->getEmail() && $p == $this->user->getPassword()) {
+        if ($e === $this->user->getEmail() && $p === $this->user->getPassword()) {
             $authentic = true;
         }
         return $authentic;
@@ -62,8 +56,8 @@ class UsrController extends Controller
             include APP_ROOT . '/views/listAllUsers.php';
             include APP_ROOT . '/views/addNewUser.php';
         } else {
-            require_once APP_ROOT . '/views/login.php';
-            require_once APP_ROOT . '/views/notLoggedMessage.php';
+            include APP_ROOT . '/views/login.php';
+            include APP_ROOT . '/views/notLoggedMessage.php';
         }
     }
 
@@ -77,24 +71,33 @@ class UsrController extends Controller
         $lname = $_POST['lastname'];
         $type = $_POST['tip'];
         if ($this->user->addUser($email, $password, $fname, $lname, $type)) {
+            $ret = true;
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/listAllUsers.php';
             include APP_ROOT . '/views/updateUserMessage.php';
         } else {
+            $ret = false;
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/listAllUsers.php';
             include APP_ROOT . '/views/addNewUser.php';
             include APP_ROOT . '/views/updateUserMessageError.php';
 
         }
-
         return $ret;
     }
 
     public function checkPermission($request)
     {
         $ret = true;
-        if(!$this->user->checkPermission($request)) {
+        if (!($request == 'login' || $request == 'logout')) {
+            if (!$this->isLogged()) {
+                include APP_ROOT . '/views/login.php';
+                include APP_ROOT . '/views/notLoggedMessage.php';
+
+                return false;
+            }
+        }
+        if (!$this->user->checkPermission($request)) {
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/accessDeniedMessage.php';
             $ret = false;
@@ -106,62 +109,54 @@ class UsrController extends Controller
     //collect user data from DB
     public function fetchUserInfo($id)
     {
-        if ($this->isLogged()) {
-            $this->user->getByID($id);
-            $_SESSION['userForChange'] = $this->user->getId();
-            require_once APP_ROOT . '/views/menu.php';
-            require_once APP_ROOT . '/views/user_info.php';
-        } else {
-            require_once APP_ROOT . '/views/login.php';
-            require_once APP_ROOT . '/views/notLoggedMessage.php';
-        }
+        $this->user->getByID($id);
+        $_SESSION['userForChange'] = $this->user->getId();
+        include APP_ROOT . '/views/menu.php';
+        include APP_ROOT . '/views/user_info.php';
     }
 
     //change user data by himself
     public function updateUser()
     {
-        if ($this->isLogged()) {
-            $id = $_POST['id'];
-            $email = $_POST['email'];
-            $currentPassword = $_POST['currentPassword'];
-            $newPassword = $_POST['newPassword'];
-            $fname = $_POST['firstname'];
-            $lname = $_POST['lastname'];
-            if ($this->user->updateUserByHimself($id, $email, $fname, $lname, $currentPassword, $newPassword)) {
-                require_once APP_ROOT . '/views/menu.php';
-                require_once APP_ROOT . '/views/updateUserMessage.php';
-            } else {
-                require_once APP_ROOT . '/views/menu.php';
-                require_once APP_ROOT . '/views/change_user_data.php';
-                require_once APP_ROOT . '/views/updateUserMessageError.php';
-            }
+        $target_dir = "images/";
+        $target_file = $target_dir . basename($_FILES["pictureURL"]['name']);
+        if (is_uploaded_file($_FILES['pictureURL']['tmp_name'])) {
+            move_uploaded_file($_FILES["pictureURL"]["tmp_name"], $target_file);
+        }
+        $pictureURL = '../PhpWebShop/'.$target_file;
+        $id = $_POST['id'];
+        $email = $_POST['email'];
+        $currentPassword = $_POST['currentPassword'];
+        $newPassword = $_POST['newPassword'];
+        $fname = $_POST['firstname'];
+        $lname = $_POST['lastname'];
+        if ($this->user->updateUserByHimself($id, $email, $fname, $lname, $currentPassword, $newPassword, $pictureURL)) {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/updateUserMessage.php';
         } else {
-            require_once APP_ROOT . '/views/login.php';
-            require_once APP_ROOT . '/views/notLoggedMessage.php';
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/change_user_data.php';
+            include APP_ROOT . '/views/updateUserMessageError.php';
         }
     }
 
     //change user data by himself
     public function updateUserByAdmin()
     {
-        if ($this->isLogged()) {
-            $id = $_POST['id'];
-            $email = $_POST['email'];
-            $newPassword = $_POST['newPassword'];
-            $fname = $_POST['firstname'];
-            $lname = $_POST['lastname'];
-            $type = $_POST['tip'];
-            if ($this->user->updateUserByAdmin($id, $email, $fname, $lname, $newPassword, $type)) {
-                require_once APP_ROOT . '/views/menu.php';
-                require_once APP_ROOT . '/views/updateUserMessage.php';
-            } else {
-                require_once APP_ROOT . '/views/menu.php';
-                require_once APP_ROOT . '/views/updateUserMessageError.php';
-            }
+        $id = $_POST['id'];
+        $email = $_POST['email'];
+        $newPassword = $_POST['newPassword'];
+        $fname = $_POST['firstname'];
+        $lname = $_POST['lastname'];
+        $type = $_POST['tip'];
+        if ($this->user->updateUserByAdmin($id, $email, $fname, $lname, $newPassword, $type)) {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/updateUserMessage.php';
         } else {
-            require_once APP_ROOT . '/views/login.php';
-            require_once APP_ROOT . '/views/notLoggedMessage.php';
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/updateUserMessageError.php';
         }
+
     }
 
     //check if user logged in
@@ -178,53 +173,33 @@ class UsrController extends Controller
     //open page for update data by himself
     public function goToUpdatePage()
     {
-        if ($this->isLogged()) {
-            require_once APP_ROOT . '/views/menu.php';
-            require_once APP_ROOT . '/views/change_user_data.php';
-        } else {
-            require_once APP_ROOT . '/views/login.php';
-            require_once APP_ROOT . '/views/notLoggedMessage.php';
-        }
+        include APP_ROOT . '/views/menu.php';
+        include APP_ROOT . '/views/change_user_data.php';
     }
 
     //open page for update data by admin
     public function goToUpdatePageByAdmin()
     {
-        if ($this->isLogged()) {
-            include APP_ROOT . '/views/menu.php';
-            $_SESSION['userForChange'] = $_GET['id'];
-            include APP_ROOT . '/views/change_user_data_By_admin.php';
-        } else {
-            include APP_ROOT . '/views/login.php';
-            include APP_ROOT . '/views/notLoggedMessage.php';
-        }
+        include APP_ROOT . '/views/menu.php';
+        $_SESSION['userForChange'] = $_GET['id'];
+        include APP_ROOT . '/views/change_user_data_By_admin.php';
     }
 
     //shows all users from database
     public function displayAllUsers()
     {
-        if ($this->isLogged()){
-            include APP_ROOT . '/views/menu.php';
-            include APP_ROOT . '/views/listAllUsers.php';
-        } else {
-            include APP_ROOT . '/views/login.php';
-            include APP_ROOT . '/views/notLoggedMessage.php';
-        }
+        include APP_ROOT . '/views/menu.php';
+        include APP_ROOT . '/views/listAllUsers.php';
     }
 
     //delete user with id = $_GET[id]
     public function deleteUser()
     {
-        if ($this->isLogged()){
-            $id =$_GET['id'];
-            if ($this->user->delete($id)) {
-                include APP_ROOT . '/views/menu.php';
-                include APP_ROOT . '/views/listAllUsers.php';
-                include APP_ROOT . '/views/deleteUserSuccessMessege.php';
-            }
-        } else {
-            include APP_ROOT . '/views/login.php';
-            include APP_ROOT . '/views/notLoggedMessage.php';
+        $id = $_GET['id'];
+        if ($this->user->delete($id)) {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/listAllUsers.php';
+            include APP_ROOT . '/views/deleteUserSuccessMessege.php';
         }
     }
 }

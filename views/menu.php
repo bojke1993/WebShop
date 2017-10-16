@@ -15,7 +15,7 @@ $user->getByID($_SESSION['user']);
 </head>
 <body>
 <ul>
-    <li><a href="#">Categories</a></li>
+    <li><a href="index.php?op=listAllCategories">Categories</a></li>
     <li><a href="#">Products</a></li>
     <li><a href="index.php?op=allUsers">Users</a></li>
     <span style="float: right">

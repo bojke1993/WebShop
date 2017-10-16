@@ -22,7 +22,7 @@ $allUsers = $user->allUsers();
                     <th>'.$user['lastName'].'</th>
                     <th>'.$user['email'].'</th>
                     <th><a href="index.php?op=updateByAdmin&id='.$user['idperson'].'">edit</a></th>
-                    <th><a href="index.php?op=deleteUser&id='.$user['idperson'].'">delete</a></th>';
+                    <th><a href="index.php?op=deleteUser&id='.$user['idperson'].'" onclick="return  confirm(\'Do you want to delete user?\')">delete</a></th>';
         }?>
     </table>
     <a href="index.php?op=showAddUserForm">Add User</a><br>
