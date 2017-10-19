@@ -1,5 +1,8 @@
 <?php
 
+require_once APP_ROOT.'/exceptions/AccessDeniedException.php';
+require_once APP_ROOT.'/exceptions/NotLoggedException.php';
+
 class UsrController extends Controller
 {
     private $user = null;
@@ -51,36 +54,39 @@ class UsrController extends Controller
 
     public function showAddUserForm()
     {
-        if ($this->isLogged()) {
-            include APP_ROOT . '/views/menu.php';
-            include APP_ROOT . '/views/listAllUsers.php';
-            include APP_ROOT . '/views/addNewUser.php';
-        } else {
-            include APP_ROOT . '/views/login.php';
-            include APP_ROOT . '/views/notLoggedMessage.php';
-        }
+        include APP_ROOT . '/views/menu.php';
+        include APP_ROOT . '/views/listAllUsers.php';
+        include APP_ROOT . '/views/addNewUser.php';
     }
 
     //call userModel method with same params
     public function addNewUser()
     {
+        $email = $password = $fname = $lname = $type = null;
         $ret = false;
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        $fname = $_POST['firstname'];
-        $lname = $_POST['lastname'];
-        $type = $_POST['tip'];
+        if (isset($_POST['email'], $_POST['password'], $_POST['firstname'], $_POST['lastname'], $_POST['tip'])) {
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $fname = $_POST['firstname'];
+            $lname = $_POST['lastname'];
+            $type = $_POST['tip'];
+        } else {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/listAllUsers.php';
+            include APP_ROOT . '/views/addNewUser.php';
+            include APP_ROOT . '/views/addUserErrorMessage.php';
+            return false;
+        }
         if ($this->user->addUser($email, $password, $fname, $lname, $type)) {
             $ret = true;
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/listAllUsers.php';
             include APP_ROOT . '/views/updateUserMessage.php';
         } else {
-            $ret = false;
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/listAllUsers.php';
             include APP_ROOT . '/views/addNewUser.php';
-            include APP_ROOT . '/views/updateUserMessageError.php';
+            include APP_ROOT . '/views/addUserErrorMessage.php';
 
         }
         return $ret;
@@ -89,18 +95,13 @@ class UsrController extends Controller
     public function checkPermission($request)
     {
         $ret = true;
-        if (!($request == 'login' || $request == 'logout')) {
+        if (!($request == 'login' || $request == 'logout' || $request == 'action')) {
             if (!$this->isLogged()) {
-                include APP_ROOT . '/views/login.php';
-                include APP_ROOT . '/views/notLoggedMessage.php';
-
-                return false;
+                throw new NotLoggedException('you are not logged on system');
             }
         }
         if (!$this->user->checkPermission($request)) {
-            include APP_ROOT . '/views/menu.php';
-            include APP_ROOT . '/views/accessDeniedMessage.php';
-            $ret = false;
+            throw new AccessDeniedException('not authorized for this action!!!');
         }
 
         return $ret;
@@ -118,18 +119,30 @@ class UsrController extends Controller
     //change user data by himself
     public function updateUser()
     {
+        $id = $email = $currentPassword = $newPassword = $fname = $lname = null;
+        if (isset($_POST['id'], $_POST['email'], $_POST['currentPassword'], $_POST['newPassword'], $_POST['firstname'],
+            $_POST['lastname']))
+        {
+            $id = $_POST['id'];
+            $email = $_POST['email'];
+            $currentPassword = $_POST['currentPassword'];
+            $newPassword = $_POST['newPassword'];
+            $fname = $_POST['firstname'];
+            $lname = $_POST['lastname'];
+        } else {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/change_user_data.php';
+            include APP_ROOT . '/views/addUserErrorMessage.php';
+            return false;
+        }
         $target_dir = "images/";
         $target_file = $target_dir . basename($_FILES["pictureURL"]['name']);
         if (is_uploaded_file($_FILES['pictureURL']['tmp_name'])) {
             move_uploaded_file($_FILES["pictureURL"]["tmp_name"], $target_file);
+            $pictureURL = '../PhpWebShop/'.$target_file;
+        } else {
+            $pictureURL = $this->user->getByID($_POST['id'])->getPictureUrl();
         }
-        $pictureURL = '../PhpWebShop/'.$target_file;
-        $id = $_POST['id'];
-        $email = $_POST['email'];
-        $currentPassword = $_POST['currentPassword'];
-        $newPassword = $_POST['newPassword'];
-        $fname = $_POST['firstname'];
-        $lname = $_POST['lastname'];
         if ($this->user->updateUserByHimself($id, $email, $fname, $lname, $currentPassword, $newPassword, $pictureURL)) {
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/updateUserMessage.php';
@@ -143,12 +156,22 @@ class UsrController extends Controller
     //change user data by himself
     public function updateUserByAdmin()
     {
-        $id = $_POST['id'];
-        $email = $_POST['email'];
-        $newPassword = $_POST['newPassword'];
-        $fname = $_POST['firstname'];
-        $lname = $_POST['lastname'];
-        $type = $_POST['tip'];
+        $id = $email = $newPassword = $fname = $lname = $type = null;
+        if (isset($_POST['id'], $_POST['email'], $_POST['newPassword'], $_POST['firstname'], $_POST['lastname'],
+            $_POST['tip']))
+        {
+            $id = $_POST['id'];
+            $email = $_POST['email'];
+            $newPassword = $_POST['newPassword'];
+            $fname = $_POST['firstname'];
+            $lname = $_POST['lastname'];
+            $type = $_POST['tip'];
+        } else {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/change_user_data.php';
+            include APP_ROOT . '/views/addUserErrorMessage.php';
+            return false;
+        }
         if ($this->user->updateUserByAdmin($id, $email, $fname, $lname, $newPassword, $type)) {
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/updateUserMessage.php';
@@ -182,6 +205,7 @@ class UsrController extends Controller
     {
         include APP_ROOT . '/views/menu.php';
         $_SESSION['userForChange'] = $_GET['id'];
+        include APP_ROOT.'/views/listAllUsers.php';
         include APP_ROOT . '/views/change_user_data_By_admin.php';
     }
 
@@ -199,7 +223,23 @@ class UsrController extends Controller
         if ($this->user->delete($id)) {
             include APP_ROOT . '/views/menu.php';
             include APP_ROOT . '/views/listAllUsers.php';
-            include APP_ROOT . '/views/deleteUserSuccessMessege.php';
+            include APP_ROOT . '/views/deleteUserSuccessMessage.php';
+        } else {
+            include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/listAllUsers.php';
+            include APP_ROOT . '/views/updateUserMessageError.php';
         }
+    }
+
+    public function showAccessDeniedMessage()
+    {
+        include APP_ROOT.'/views/menu.php';
+        include APP_ROOT.'/views/accessDeniedMessage.php';
+    }
+
+    public function showNotLoggedMessage()
+    {
+        include APP_ROOT.'/views/login.php';
+        include APP_ROOT.'/views/notLoggedMessage.php';
     }
 }

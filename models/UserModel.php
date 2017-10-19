@@ -202,7 +202,11 @@ class UserModel
             $stmt->bindParam(':lastname', $lname);
             $stmt->bindParam(':tip', $type);
             $stmt->execute();
-            return  true;
+            if ($stmt->rowCount() !== 0) {
+                return true;
+            } else {
+                return false;
+            }
         } catch (Exception $exception) {
             $exception->getMessage();
             return false;
@@ -264,7 +268,7 @@ class UserModel
             $stmt->bindParam(':url',$url);
             $stmt->execute();
 
-            return true;
+            return $stmt->rowCount();
         }catch(PDOException $exception){
             $exception->getMessage();
             return false;
@@ -304,7 +308,8 @@ class UserModel
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
-            return true;
+            $res = $stmt->rowCount();
+            return $res;
         } catch(PDOException $exception){
             $exception->getMessage();
             return false;

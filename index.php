@@ -12,15 +12,25 @@ error_reporting(E_ALL);
 session_start();
 
 define('APP_ROOT', __DIR__);
+require_once 'exceptions/AccessDeniedException.php';
 require_once 'models/UserModel.php';
 require_once 'models/CategoriesModel.php';
+require_once 'models/ProductsModel.php';
 require_once 'controllers/Controller.php';
 require_once 'controllers/UsrController.php';
 require_once 'controllers/Router.php';
 require_once 'controllers/CategoriesController.php';
+require_once 'controllers/ProductController.php';
 require_once 'database/DB.php';
 
-$op = $_REQUEST['op'];
+$op = 'action';
+if (isset($_REQUEST['op'])) {
+    $op = $_REQUEST['op'];
+}
+
 $req = new Router();
 $req->handleRequest($op);
+
+
+
 

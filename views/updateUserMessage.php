@@ -2,5 +2,5 @@
 ?>
 
 <body>
-    <b>user updated successfully!!!</b>
+    <b>updated successfully!!!</b>
 </body>

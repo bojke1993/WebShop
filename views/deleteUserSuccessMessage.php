@@ -3,5 +3,5 @@
 ?>
 
 <body>
-User deleted successfully
+Deleted successfully
 </body>

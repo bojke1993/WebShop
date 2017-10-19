@@ -4,6 +4,7 @@ require_once APP_ROOT.'/models/UserModel.php';
 
 $user = new UserModel();
 $user->getByID($_SESSION['user']);
+$url = $user->getPictureUrl();
 ?>
 
 
@@ -18,15 +19,13 @@ $user->getByID($_SESSION['user']);
     <li><a href="index.php?op=listAllCategories">Categories</a></li>
     <li><a href="#">Products</a></li>
     <li><a href="index.php?op=allUsers">Users</a></li>
-    <span style="float: right">
-            <li>
-            <a><?php echo $user->getFirstName().'&nbsp;'.$user->getLastName(); ?></a>
-                <ul class="dropdown">
-                    <li><a href="index.php?op=userInfo"> MyProfile</a></li>
-                    <li><a href="index.php?op=logout">logout</a></li>
-                </ul>
-        </li>
-        </span>
+    <li style="float: right">
+        <a><?php echo $user->getFirstName().'&nbsp;'.$user->getLastName(); ?></a>
+        <ul class="dropdown">
+            <li style="float: left"><a href="index.php?op=userInfo"> MyProfile</a></li>
+            <li style="float: left"><a href="index.php?op=logout">logout</a></li>
+        </ul>
+    </li>
 </ul>
 </body>
 </html>

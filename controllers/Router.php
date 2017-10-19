@@ -13,8 +13,14 @@ class Router
     public function handleRequest($request)
     {
         if ($request != null) {
-            $ctrl = new UsrController();
-            if (!$ctrl->checkPermission($request)) {
+            try {
+                $ctrl = new UsrController();
+                $ctrl->checkPermission($request);
+            } catch (NotLoggedException $e) {
+                $ctrl->showNotLoggedMessage();
+                return false;
+            } catch (AccessDeniedException $e){
+                $ctrl->showAccessDeniedMessage();
                 return false;
             }
         }
@@ -79,6 +85,42 @@ class Router
             case 'listAllCategories':
                 $ctrl = new CategoriesController();
                 $ctrl->showAllCategories();
+                break;
+
+            case 'goToEditCategory':
+                $ctrl = new CategoriesController();
+                $ctrl->goToEditCategory();
+                break;
+
+            case 'goToAddCategory':
+                $ctrl = new CategoriesController();
+                $ctrl->goToAddCategory();
+                break;
+
+            case 'updateCategory':
+                $ctrl = new CategoriesController();
+                $ctrl->updateCategory();
+                break;
+
+            case 'deleteCategory':
+                $ctrl = new CategoriesController();
+                $ctrl->deleteCategory();
+                break;
+
+
+            case 'addCategory':
+                $ctrl = new CategoriesController();
+                $ctrl->addCategory();
+                break;
+
+            case 'showProductsByCategory':
+                $ctrl = new ProductController();
+                $ctrl->showProductsByCategory();
+                break;
+
+            case 'showProductInfo':
+                $ctrl = new ProductController();
+                $ctrl->showProductInfo();
                 break;
 
             default:

@@ -6,8 +6,9 @@ $allUsers = $user->allUsers();
 ?>
 
 <body>
-    <table style="border=2">
-        <tr style="text-align: left; background-color:darkkhaki">
+    <a href="index.php?op=showAddUserForm">Add User</a><br>
+    <table style="border=2" width="50%">
+        <tr style="text-align: left; background-color:lightgray; color: black">
             <th>id</th>
             <th>firstName</th>
             <th>lastName</th>
@@ -16,7 +17,7 @@ $allUsers = $user->allUsers();
             <th>delete</th>
         </tr>
         <?php foreach ($allUsers as $user) {
-            echo '<tr>
+            echo '<tr style="text-align: left">
                     <th>'.$user['idperson'].'</th>
                     <th>'.$user['firstName'].'</th>
                     <th>'.$user['lastName'].'</th>
@@ -25,5 +26,4 @@ $allUsers = $user->allUsers();
                     <th><a href="index.php?op=deleteUser&id='.$user['idperson'].'" onclick="return  confirm(\'Do you want to delete user?\')">delete</a></th>';
         }?>
     </table>
-    <a href="index.php?op=showAddUserForm">Add User</a><br>
 </body>
