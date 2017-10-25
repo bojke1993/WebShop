@@ -40,13 +40,15 @@ class CategoriesController extends Controller
         if (isset($_GET['idCat'])) {
             $idCat = $_GET['idCat'];
         }
-        if ($this->cat->deleteCategory($idCat)) {
+        try {
+            $this->cat->deleteCategory($idCat);
             include APP_ROOT.'/views/menu.php';
             include APP_ROOT.'/views/allCategories.php';
             include APP_ROOT.'/views/deleteUserSuccessMessage.php';
-        } else {
+        } catch (CategoryErrorException $e) {
             include APP_ROOT.'/views/menu.php';
             include APP_ROOT.'/views/allCategories.php';
+            echo $e->getMessage();
         }
     }
 

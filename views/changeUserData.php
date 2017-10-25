@@ -18,4 +18,8 @@ $url = $userForChange->getPictureUrl();
     <input type="hidden" name="id" value="<?php echo $userForChange->getId();?>">
     <input type="submit" value="changeUserData" id="submit" name="op">
 </form>
+<form method=post action="index.php">
+    API key:&nbsp;<?php echo $userForChange->getApiKey(); ?><input type="submit" value="generateAPI" name="op"><br><br>
+</form>
 </body>
+

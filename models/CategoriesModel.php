@@ -6,6 +6,15 @@ class CategoriesModel
     private $name;
     private $description;
     private $parent;
+    private $parentID;
+
+    /**
+     * @return mixed
+     */
+    public function getParentID()
+    {
+        return $this->parentID;
+    }
 
     /**
      * @return mixed
@@ -43,6 +52,7 @@ class CategoriesModel
             $stmt->execute();
             $res = $stmt->fetch();
             $this->parent = $res['name'];
+            $this->parentID = $res['parentID'];
             return $this->parent;
         } catch (PDOException $e) {
             $e->getMessage();
@@ -102,12 +112,30 @@ class CategoriesModel
 
     public function deleteCategory($id)
     {
-        $sql = "DELETE from categories WHERE idCategory = :id";
+
+        $sql1 = "DELETE from belongs WHERE idCategory = :id";
+        $sql2 = "DELETE from subcategories WHERE parentID = :id OR  childID = :id";
+        $sql3 = "DELETE from categories WHERE idCategory = :id";
         try {
             $conn = DB::getInstance()->getConnection();
-            $stmt = $conn->prepare($sql);
+            $stmt = $conn->prepare($sql1);
             $stmt->bindParam(':id', $id);
-            $stmt->execute();
+            $deleted = $stmt->execute();
+            if ($deleted == false) {
+                throw new CategoryErrorException('category not deleted!!!');
+            }
+            $stmt = $conn->prepare($sql2);
+            $stmt->bindParam(':id', $id);
+            $deleted = $stmt->execute();
+            if ($deleted == false) {
+                throw new CategoryErrorException('category not deleted!!!');
+            }
+            $stmt = $conn->prepare($sql3);
+            $stmt->bindParam(':id', $id);
+            $deleted = $stmt->execute();
+            if ($deleted == false) {
+                throw new CategoryErrorException('category not deleted!!!');
+            }
             return true;
         } catch(PDOException $exception){
             $exception->getMessage();
@@ -171,7 +199,7 @@ class CategoriesModel
                 FROM belongs
                 INNER JOIN categories ON categories.idCategory = belongs.idCategory
                 WHERE belongs.idProduct = :idProd";
-        try{
+        try {
             $conn = DB::getInstance()->getConnection();
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':idProd', $idProd);
@@ -179,7 +207,32 @@ class CategoriesModel
             $res = $stmt->fetchAll();
 
             return $res;
-        }catch(PDOException $exception){
+        } catch (PDOException $exception) {
+            $exception->getMessage();
+
+            return false;
+        }
+    }
+
+    public function getCategoriesWhichNotBelongsToProduct($idProd)
+    {
+        $sql = "SELECT DISTINCT categories.name, categories.idCategory
+                FROM categories
+                LEFT JOIN belongs ON categories.idCategory = belongs.idCategory
+                WHERE categories.idCategory NOT IN (
+	                SELECT DISTINCT belongs.idCategory
+	                FROM belongs
+	                LEFT JOIN categories ON categories.idCategory = belongs.idCategory
+	                WHERE belongs.idProduct = :idProd)";
+        try {
+            $conn = DB::getInstance()->getConnection();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':idProd', $idProd);
+            $stmt->execute();
+            $res = $stmt->fetchAll();
+
+            return $res;
+        } catch (PDOException $exception) {
             $exception->getMessage();
 
             return false;

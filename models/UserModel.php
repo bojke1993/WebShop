@@ -14,9 +14,18 @@ class UserModel
     private $firstName;
     private $lastName;
     private $type;
+    private $apiKey;
     private $pictureUrl;
 
     public $allUsersList = array();
+
+    /**
+     * @return mixed
+     */
+    public function getApiKey()
+    {
+        return $this->apiKey;
+    }
 
     /**
      * @return array
@@ -177,6 +186,7 @@ class UserModel
             $this->lastName = $result['lastName'];
             $this->type = $result['type'];
             $this->pictureUrl = $result['picture'];
+            $this->apiKey = $result['apiToken'];
             if ($this == null) {
                 return false;
             } else {
@@ -314,5 +324,16 @@ class UserModel
             $exception->getMessage();
             return false;
         }
+    }
+
+    public function insertAPIKey($api, $id)
+    {
+        $sql = "UPDATE person SET apiToken = :api WHERE idperson = :id";
+        $conn = DB::getInstance()->getConnection();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':api', $api);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $this->apiKey = $api;
     }
 }

@@ -1,7 +1,15 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivanbojovic
- * Date: 23.10.17.
- * Time: 09.36
- */
+
+class ProductErrorException extends Exception
+{
+    protected $message;
+
+    /**
+     * ProductErrorException constructor.
+     * @param $message
+     */
+    public function __construct($message)
+    {
+        $this->message = $message;
+    }
+}

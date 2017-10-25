@@ -1,7 +1,15 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivanbojovic
- * Date: 23.10.17.
- * Time: 10.46
- */
+
+class PictureException extends Exception
+{
+    protected $message;
+
+    /**
+     * PictureException constructor.
+     * @param $message
+     */
+    public function __construct($message)
+    {
+        $this->message = $message;
+    }
+}

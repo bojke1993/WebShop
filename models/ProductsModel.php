@@ -56,15 +56,50 @@ class ProductsModel
     }
 
     //this function removes selected product from DB
-    public function deleteProduct()
+    public function deleteProduct($id)
     {
-        //todo implement method for deleting
+        $sql = "DELETE FROM products WHERE idproducts = :id";
+        try {
+            $this->deleteFromBelongs($id);
+            $this->deleteProductPicture($id);
+            $conn = DB::getInstance()->getConnection();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $deleted = $stmt->execute();
+            return true;
+        } catch(PDOException $exception){
+            $exception->getMessage();
+            return false;
+        }
     }
 
     //add product
-    public function addProduct()
+    public function addProduct($name, $desc, $price, $categories, $pictureURL)
     {
-        //todo implement function for insert new product
+        $sql = "INSERT INTO products (name, description, price)
+                VALUES (:name, :description, :price)";
+        try {
+            $conn = DB::getInstance()->getConnection();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':description', $desc);
+            $stmt->bindParam(':price', $price);
+            $inserted = $stmt->execute();
+            $newID = null;
+            if ($inserted) {
+                //if transaction is successful, we will use id of the last inserted row as argument for
+                //adding categories and picture to recently added product
+                $newID = $conn->lastInsertId();
+            } else {
+                throw new ProductErrorException('Product not added!!!');
+            }
+            $this->addAllCategoriesToProduct($categories, $newID);
+            $this->addProductPicture($pictureURL, $newID);
+            return true;
+        } catch (Exception $exception) {
+            $exception->getMessage();
+            return false;
+        }
     }
 
     //fetches product info with id as argument
@@ -87,6 +122,7 @@ class ProductsModel
         }
     }
 
+    //returns all products which belongs to selected category
     public function getByCategory($idCat)
     {
         $sql = "SELECT products.idproducts, products.name, products.price, products.description, belongs.idCategory 
@@ -106,6 +142,7 @@ class ProductsModel
         }
     }
 
+    //returns all product pictures from database
     public function getAllProductPictures($idProd)
     {
         $sql = "SELECT * 
@@ -123,4 +160,97 @@ class ProductsModel
             return false;
         }
     }
+
+    //returns all products that matches with passed filter
+    public function searchProducts($filter)
+    {
+        $param = '%' . $filter . '%';
+        $sql = "SELECT * FROM products WHERE name LIKE :param";
+        try {
+            $conn = DB::getInstance()->getConnection();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':param', $param);
+            $stmt->execute();
+            $res = $stmt->fetchAll();
+            if ($res !== null) {
+                return $res;
+            }
+        } catch (PDOException $exception) {
+            $exception->getMessage();
+            return false;
+        }
+    }
+
+    //adding all categories (array) to selected product
+    public function addAllCategoriesToProduct($categories, $prodID)
+    {
+        foreach ($categories as $category) {
+            $sql2 = "INSERT INTO belongs (idProduct, idCategory) VALUES (:prodID, :categoryID)";
+            $conn2 = DB::getInstance()->getConnection();
+            $stmt2 = $conn2->prepare($sql2);
+            $stmt2->bindParam(':prodID', $prodID);
+            $stmt2->bindParam(':categoryID', $category);
+            $inserted = $stmt2->execute();
+            if ($inserted == false) {
+                throw new ProductErrorException('Categories not added');
+            }
+        }
+    }
+
+    public function addProductPicture($pictureURL, $prodID)
+    {
+        if ($pictureURL == null) {
+            return false;
+        }
+        $sql = "INSERT INTO productImages (imageUrl, idProd) VALUES (:pictureURL, :productID)";
+        $conn = DB::getInstance()->getConnection();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':pictureURL', $pictureURL);
+        $stmt->bindParam(':productID', $prodID);
+        $inserted = $stmt->execute();
+        if ($inserted == false) {
+            throw new PictureException('Picture not uploaded');
+        }
+    }
+
+    public function deleteProductPicture($id)
+    {
+        $sql = "DELETE FROM productImages WHERE idProd = :id";
+        $conn = DB::getInstance()->getConnection();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $deleted = $stmt->execute();
+    }
+
+    public function deleteFromBelongs($id)
+    {
+        $sql = "DELETE FROM belongs WHERE idProduct = :id";
+        $conn = DB::getInstance()->getConnection();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $deleted = $stmt->execute();
+    }
+
+    public function updateProduct($name, $description, $price, $id)
+    {
+        $sql = 'UPDATE products SET products.name = :name, products.description = :description, products.price = :price
+                WHERE products.idproducts = :id';
+        try {
+            $conn = DB::getInstance()->getConnection();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':description', $description);
+            $stmt->bindParam(':price', $price);
+            $stmt->bindParam(':id', $id);
+            $ret = $stmt->execute();
+            if ($ret == false) {
+                throw new ProductErrorException('product not updated!!!');
+            }
+            return $ret;
+        } catch (PDOException $exception) {
+            $exception->getMessage();
+            return false;
+        }
+    }
+
 }

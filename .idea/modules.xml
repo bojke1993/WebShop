@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/PhpWebShop.iml" filepath="$PROJECT_DIR$/.idea/PhpWebShop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../restApiExample/.idea/restApiExample.iml" filepath="$PROJECT_DIR$/../restApiExample/.idea/restApiExample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../restClient/.idea/restClient.iml" filepath="$PROJECT_DIR$/../restClient/.idea/restClient.iml" />
     </modules>
   </component>
 </project>

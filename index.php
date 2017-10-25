@@ -12,6 +12,10 @@ error_reporting(E_ALL);
 session_start();
 
 define('APP_ROOT', __DIR__);
+require_once 'exceptions/CategoryErrorException.php';
+require_once 'exceptions/PictureException.php';
+require_once 'exceptions/ProductErrorException.php';
+require_once 'exceptions/NotLoggedException.php';
 require_once 'exceptions/AccessDeniedException.php';
 require_once 'models/UserModel.php';
 require_once 'models/CategoriesModel.php';

@@ -12,6 +12,4 @@ class NotLoggedException extends Exception
     {
         $this->message = $message;
     }
-
-
 }

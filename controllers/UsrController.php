@@ -23,10 +23,14 @@ class UsrController extends Controller
         $this->user = new UserModel();
     }
 
+    //if username and password are valid, sends to home page...
     public function login($username, $password)
     {
         if ($this->authenticate($username, $password)) {
             $_SESSION['user'] = $this->user->getId();
+            $apiKey = base64_encode(rand(1000000,1000000000000));
+            $this->user->insertAPIKey($apiKey, $this->user->getID());
+            header('Authorization:'.$this->generateJWT());
             include APP_ROOT . '/views/menu.php';
         } else {
             include APP_ROOT . '/views/login.php';
@@ -52,6 +56,7 @@ class UsrController extends Controller
         include APP_ROOT . '/views/login.php';
     }
 
+    //displays form for adding new user
     public function showAddUserForm()
     {
         include APP_ROOT . '/views/menu.php';
@@ -92,9 +97,11 @@ class UsrController extends Controller
         return $ret;
     }
 
+    //checks if authenticated user has required permission for passed action
     public function checkPermission($request)
     {
         $ret = true;
+        //first checking if user is logged
         if (!($request == 'login' || $request == 'logout' || $request == 'action')) {
             if (!$this->isLogged()) {
                 throw new NotLoggedException('you are not logged on system');
@@ -113,7 +120,7 @@ class UsrController extends Controller
         $this->user->getByID($id);
         $_SESSION['userForChange'] = $this->user->getId();
         include APP_ROOT . '/views/menu.php';
-        include APP_ROOT . '/views/user_info.php';
+        include APP_ROOT . '/views/userInfo.php';
     }
 
     //change user data by himself
@@ -131,24 +138,18 @@ class UsrController extends Controller
             $lname = $_POST['lastname'];
         } else {
             include APP_ROOT . '/views/menu.php';
-            include APP_ROOT . '/views/change_user_data.php';
+            include APP_ROOT . '/views/changeUserData.php';
             include APP_ROOT . '/views/addUserErrorMessage.php';
             return false;
         }
-        $target_dir = "images/";
-        $target_file = $target_dir . basename($_FILES["pictureURL"]['name']);
-        if (is_uploaded_file($_FILES['pictureURL']['tmp_name'])) {
-            move_uploaded_file($_FILES["pictureURL"]["tmp_name"], $target_file);
-            $pictureURL = '../PhpWebShop/'.$target_file;
-        } else {
-            $pictureURL = $this->user->getByID($_POST['id'])->getPictureUrl();
-        }
+        $pictureURL = $this->uploadPicture();
         if ($this->user->updateUserByHimself($id, $email, $fname, $lname, $currentPassword, $newPassword, $pictureURL)) {
             include APP_ROOT . '/views/menu.php';
+            include APP_ROOT . '/views/userInfo.php';
             include APP_ROOT . '/views/updateUserMessage.php';
         } else {
             include APP_ROOT . '/views/menu.php';
-            include APP_ROOT . '/views/change_user_data.php';
+            include APP_ROOT . '/views/changeUserData.php';
             include APP_ROOT . '/views/updateUserMessageError.php';
         }
     }
@@ -168,7 +169,7 @@ class UsrController extends Controller
             $type = $_POST['tip'];
         } else {
             include APP_ROOT . '/views/menu.php';
-            include APP_ROOT . '/views/change_user_data.php';
+            include APP_ROOT . '/views/changeUserData.php';
             include APP_ROOT . '/views/addUserErrorMessage.php';
             return false;
         }
@@ -197,7 +198,7 @@ class UsrController extends Controller
     public function goToUpdatePage()
     {
         include APP_ROOT . '/views/menu.php';
-        include APP_ROOT . '/views/change_user_data.php';
+        include APP_ROOT . '/views/changeUserData.php';
     }
 
     //open page for update data by admin
@@ -206,7 +207,7 @@ class UsrController extends Controller
         include APP_ROOT . '/views/menu.php';
         $_SESSION['userForChange'] = $_GET['id'];
         include APP_ROOT.'/views/listAllUsers.php';
-        include APP_ROOT . '/views/change_user_data_By_admin.php';
+        include APP_ROOT . '/views/changeUserDataByAdmin.php';
     }
 
     //shows all users from database
@@ -219,6 +220,9 @@ class UsrController extends Controller
     //delete user with id = $_GET[id]
     public function deleteUser()
     {
+        if (!isset($_GET['id'])) {
+            return false;
+        }
         $id = $_GET['id'];
         if ($this->user->delete($id)) {
             include APP_ROOT . '/views/menu.php';
@@ -241,5 +245,23 @@ class UsrController extends Controller
     {
         include APP_ROOT.'/views/login.php';
         include APP_ROOT.'/views/notLoggedMessage.php';
+    }
+
+    public function generateApiKey()
+    {
+        $apiKey = base64_encode(rand(1000000,1000000000000));
+        $this->user->insertAPIKey($apiKey, $this->user->getByID($_SESSION['user'])->getId());
+        include APP_ROOT.'/views/menu.php';
+        include APP_ROOT . '/views/changeUserData.php';
+    }
+
+    public function generateJWT()
+    {
+        $token = array(
+            'email' => $this->user->getId(),
+            'APIKey' => $this->user->getApiKey()
+        );
+        $json = json_encode($token);
+        return base64_encode($json);
     }
 }

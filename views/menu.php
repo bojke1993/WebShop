@@ -17,7 +17,7 @@ $url = $user->getPictureUrl();
 <body>
 <ul>
     <li><a href="index.php?op=listAllCategories">Categories</a></li>
-    <li><a href="#">Products</a></li>
+    <li><a href="index.php?op=goToSearchProducts">Products</a></li>
     <li><a href="index.php?op=allUsers">Users</a></li>
     <li style="float: right">
         <a><?php echo $user->getFirstName().'&nbsp;'.$user->getLastName(); ?></a>
@@ -27,5 +27,13 @@ $url = $user->getPictureUrl();
         </ul>
     </li>
 </ul>
+<?php
+$encoded = null;
+$response = apache_response_headers();
+if (isset($response['Authorization'])) {
+    $encoded = $response['Authorization'];
+}
+$json = base64_decode($encoded);
+?>
 </body>
 </html>

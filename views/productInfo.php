@@ -41,4 +41,7 @@ if (isset($_GET['idProd'])) {
             <th><?php echo $prod->getPrice()?></th>
         </tr>
     </table>
+
+    <a href="index.php?op=edit+product&idProd=<?php echo $prod->getId()?>"><input type="submit" value="edit product"></a>
+
 </body>
